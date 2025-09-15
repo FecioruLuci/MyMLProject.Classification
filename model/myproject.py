@@ -171,3 +171,9 @@ print(len(x_test))
 print(classification_report(y_test, pipe.predict(x_test)))
 for celeb_namee, label in class_dict.items():
     print(f"{celeb_namee} -- {label}")
+import collections
+print(collections.Counter(y))
+print("Train:", collections.Counter(y_train))
+print("Test:", collections.Counter(y_test))
+
+
