@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import pandas as pd
 from matplotlib import pyplot as plt
 import matplotlib
 import os
@@ -10,6 +11,13 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import classification_report
+from sklearn.model_selection import GridSearchCV
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix
+import seaborn as sb
 
 img = cv2.imread("W:/vscode/Machine-Learning/MLPROJECTClassification/model/dataset/test_img/17038722333525.jpg")
 #print(img.shape)
@@ -47,8 +55,8 @@ face_img = cv2.rectangle(img,(x,y),(x+w,y+h),(255,0,0))
 # # plt.imshow(roi_color, cmap='gray')
 # # plt.show()
 
-def get_croppes_img(imagie_path):
-    img = cv2.imread(imagie_path)
+def get_croppes_img(image_path):
+    img = cv2.imread(image_path)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     faces = face_cascade.detectMultiScale(gray, 1.3, 5)
     for (x,y,w,h) in faces:
@@ -171,9 +179,61 @@ print(len(x_test))
 print(classification_report(y_test, pipe.predict(x_test)))
 for celeb_namee, label in class_dict.items():
     print(f"{celeb_namee} -- {label}")
-import collections
-print(collections.Counter(y))
-print("Train:", collections.Counter(y_train))
-print("Test:", collections.Counter(y_test))
+
+
+model_params = {
+    "svm":{
+        "model": SVC(gamma="auto",probability=True),
+        "params": {
+            "svc__C": [1,10,100,1000],
+            "svc__kernel": ["rbf","linear"],
+        }
+    
+    },
+    "random forest":{
+        "model": RandomForestClassifier(),
+        "params":{
+            "randomforestclassifier__n_estimators": [1,5,10],
+        }
+    },
+    "logistic regresion":{
+        "model": LogisticRegression(solver="liblinear", multi_class="auto"),
+        "params":{
+            "logisticregression__C": [1,5,10],
+        }
+    },
+}
+scores = []
+best_estimator = {}
+for modell, param in model_params.items():
+    pipe = make_pipeline(StandardScaler(), param["model"])
+    model2 = GridSearchCV(pipe,param["params"],cv=5, return_train_score=False)
+    model2.fit(x_train,y_train)
+    scores.append({
+        "model": modell,
+        "best_score": model2.best_score_,
+        "best_params": model2.best_params_
+    })
+    best_estimator[modell] = model2.best_estimator_
+
+df = pd.DataFrame(scores, columns=["model","best_score","best_params"])
+print(df.head(5))
+print(best_estimator["logistic regresion"].score(x_train,y_train))
+print(best_estimator["svm"].score(x_train,y_train))
+print(best_estimator["random forest"].score(x_train,y_train))
+
+best = best_estimator["logistic regresion"]
+cm = confusion_matrix(y_test, best.predict(x_test))
+plt.figure(figsize=(10,7))
+sb.heatmap(cm, annot=True)
+plt.xlabel("Predicted")
+plt.ylabel("Truth")
+plt.show()
+
+
+
+
+
+
 
 
