@@ -6,6 +6,7 @@ import matplotlib
 import os
 import shutil
 import pywt
+import json
 from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
@@ -18,6 +19,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
 import seaborn as sb
+import joblib
 
 img = cv2.imread("W:/vscode/Machine-Learning/MLPROJECTClassification/model/dataset/test_img/17038722333525.jpg")
 #print(img.shape)
@@ -229,6 +231,10 @@ sb.heatmap(cm, annot=True)
 plt.xlabel("Predicted")
 plt.ylabel("Truth")
 plt.show()
+
+joblib.dump(best,"saved.model.pkl")
+with open("class_dict","w") as f:
+    f.write(json.dumps(class_dict))
 
 
 
